@@ -56,15 +56,40 @@ var getStations = module.exports.getStations = function (next) {
 
 // gets all BART routes using the my511.org api
 var getRoutes = module.exports.getRoutes = function (next) {
-  var f = ff(function () {
-    request.get('http://services.my511.org/Transit2.0/GetRoutesForAgency.aspx?agencyName=BART&token=' + config.my511, f.slotMulti(2));
+  var routes = [];
   
-  }, function (r, body) {
+  request.get('http://services.my511.org/Transit2.0/GetRoutesForAgency.aspx?agencyName=BART&token=' + config.my511, function (e, r, body) {
+    if (e) { return next(e); }
     
+    $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true, xmlMode: true });
+    
+    $('routelist > route').each(function (route) {
+      routes.push({
+          name: $(this).attr('name')
+        , code: $(this).attr('code')
+      });
+    });
+    
+    next(null, routes);
   });
 };
 
-// gets all BART stops for the given route using the my511.org api
-var getStops = module.exports.getStops = function (code, next) {
+// gets all BART stations for the given route using the my511.org api
+var getStations = module.exports.getStations = function (code, next) {
+  var stops = [];
   
-}
+  request.get('http://services.my511.org/Transit2.0/GetStopsForRoute.aspx?routeIDF=BART~' + code + '&token=' + config.my511, function (e, r, body) {
+    if (e) { return next(e); }
+    
+    $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true, xmlMode: true });
+    
+    $('stoplist > stop').each(function (route) {
+      stops.push({
+          name: $(this).attr('name')
+        , code: $(this).attr('code')
+      });
+    });
+    
+    next(null, stops);
+  });
+};
