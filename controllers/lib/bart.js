@@ -8,7 +8,7 @@ var resolve = require('url').resolve;
 // scrapes the bart stations list to get each station's address (which 511 doesn't provide)
 // does this by GETting the stations list page, finding all station urls, GETting each url,
 // scraping the address from each url, then geocoding the address usinb bing maps
-var getStations = module.exports.getStations = function (next) {
+var getStations = function (next) {
   var stations = [];
   var url = 'http://www.bart.gov/stations/index.aspx';
   
@@ -55,7 +55,7 @@ var getStations = module.exports.getStations = function (next) {
 };
 
 // gets all BART routes using the my511.org api
-var getRoutes = module.exports.getRoutes = function (next) {
+var getRoutes = function (next) {
   var routes = [];
   
   request.get('http://services.my511.org/Transit2.0/GetRoutesForAgency.aspx?agencyName=BART&token=' + config.my511, function (e, r, body) {
@@ -75,7 +75,7 @@ var getRoutes = module.exports.getRoutes = function (next) {
 };
 
 // gets all BART stations for the given route using the my511.org api
-var getStations = module.exports.getStations = function (code, next) {
+var getStations = function (code, next) {
   var stops = [];
   
   request.get('http://services.my511.org/Transit2.0/GetStopsForRoute.aspx?routeIDF=BART~' + code + '&token=' + config.my511, function (e, r, body) {
@@ -93,3 +93,9 @@ var getStations = module.exports.getStations = function (code, next) {
     next(null, stops);
   });
 };
+
+var setup = module.exports.setup = function (next) {
+  var f = ff(function () {
+    
+  })
+}
