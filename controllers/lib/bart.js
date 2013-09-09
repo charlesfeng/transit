@@ -9,7 +9,7 @@ var Station = mongoose.model('Station');
 
 // scrapes the bart stations list to get each station's address (which 511 doesn't provide)
 // does this by GETting the stations list page, finding all station urls, GETting each url,
-// scraping the address from each url, then geocoding the address usinb bing maps
+// scraping the address from each url, then geocoding the address using bing maps
 var getStations = function (next) {
   var stations = [];
   var url = 'http://www.bart.gov/stations/index.aspx';
@@ -98,6 +98,7 @@ var getStops = function (code, next) {
 };
 
 // refresh all bart data
+// this includes all routes + stations, with lonlats (for geoquerying)
 var refresh = module.exports.refresh = function (next) {
   var stations = {};
   var routes = {};
