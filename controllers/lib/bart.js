@@ -99,7 +99,7 @@ var getStops = function (code, next) {
 
 // refresh all bart data
 // this includes all routes + stations, with lonlats (for geoquerying)
-var refresh = module.exports.refresh = function (next) {
+module.exports.refresh = function (next) {
   var stations = {};
   var routes = {};
   var stops = {};
