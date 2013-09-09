@@ -1,0 +1,26 @@
+doctype
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+    
+    title Transit
+    
+    link(href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css', rel='stylesheet')
+    != css('bootstrap')
+    != css('index')
+    
+  body
+    nav.navbar.navbar-default.navbar-fixed-top.navbar-inverse(role='navigation')
+      div.container
+        div.navbar-header
+          a.navbar-brand(href='/') Transit
+        ul.nav.navbar-nav.pull-right
+    div.row
+      div.col-xs-12.col-sm-12.col-md-12 dd
+    
+    != js('jquery')
+    != js('underscore')
+    != js('backbone')
+    != js('marionette')
+    != js('index')
