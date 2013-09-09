@@ -4,6 +4,8 @@ var ff = require('ff');
 var helpers = require('./');
 var request = require('request');
 var resolve = require('url').resolve;
+var Route = mongoose.model('Route');
+var Station = mongoose.model('Station');
 
 // scrapes the bart stations list to get each station's address (which 511 doesn't provide)
 // does this by GETting the stations list page, finding all station urls, GETting each url,
@@ -21,23 +23,24 @@ var getStations = function (next) {
     
     $('#stations-directory a').each(function () {
       stations.push({
-          name: $(this).text().replace('Bay Fair', 'Bayfair')
+          name: $(this).text().replace('Bay Fair', 'Bayfair').replace('/UN Plaza', '').replace(' del ', ' Del ')
         , url: resolve(url, $(this).attr('href'))
       });
     });
     
     async.mapSeries(stations, function (station, next) {
-      console.log(station)
+      console.log('bart: getting stations: ' + station.name);
       if (station.url.match(/sfia/)) {
-        helpers.geocode('SFO', function (e, lonlat) {
+        station.address = 'SFO';
+        helpers.geocode(station.address, function (e, lonlat) {
           station.lonlat = lonlat;
           next(null, station);
         });
       } else {
         request.get(station, function (e, r, body) {
           var $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true });
-          var address = $('#subheader .subtitle').text().replace('/', ',');
-          helpers.geocode(address, function (e, lonlat) {
+          station.address = $('#subheader .subtitle').text().replace('/', ',');
+          helpers.geocode(station.address, function (e, lonlat) {
             station.lonlat = lonlat;
             next(null, station);
           })
@@ -74,8 +77,8 @@ var getRoutes = function (next) {
   });
 };
 
-// gets all BART stations for the given route using the my511.org api
-var getStations = function (code, next) {
+// gets all BART stops for the given route using the my511.org api
+var getStops = function (code, next) {
   var stops = [];
   
   request.get('http://services.my511.org/Transit2.0/GetStopsForRoute.aspx?routeIDF=BART~' + code + '&token=' + config.my511, function (e, r, body) {
@@ -86,7 +89,7 @@ var getStations = function (code, next) {
     $('stoplist > stop').each(function (route) {
       stops.push({
           name: $(this).attr('name')
-        , code: $(this).attr('code')
+        , code: $(this).attr('stopcode')
       });
     });
     
@@ -94,8 +97,84 @@ var getStations = function (code, next) {
   });
 };
 
-var setup = module.exports.setup = function (next) {
+// refresh all bart data
+var refresh = module.exports.refresh = function (next) {
+  var stations = {};
+  var routes = {};
+  var stops = {};
+  
   var f = ff(function () {
+    console.log('bart: removing old data');
+    Route.remove({ agency: 'bart' }, f.wait());
+    Station.remove({ agency: 'bart' }, f.wait());
+  
+  }, function () {
+    console.log('bart: getting stations');
+    getStations(f.slot());
     
-  })
-}
+  }, function (docs) {
+    docs.forEach(function (station) {
+      stations[station.name] = station;
+    });
+    
+    console.log('bart: getting routes');
+    getRoutes(f.slot());
+  
+  }, function (docs) {
+    console.log('bart: getting stops');
+    async.eachSeries(docs, function (route, next) {
+      route = new Route({
+          agency: 'bart'
+        , name: route.name
+        , code: route.code
+        , stations: []
+      });
+      
+      var g = ff(function () {
+        console.log('bart: getting stops: route ' + route.code);
+        getStops(route.code, g.slot());
+        route.save(g.slot());
+      
+      }, function (docs) {
+        routes[route._id.toString()] = route;
+        
+        docs.forEach(function (stop) {
+          if (stops[stop.code]) {
+            stops[stop.code].routes.addToSet(route._id);
+          } else {
+            stops[stop.code] = new Station({
+                agency: 'bart'
+              , name: stop.name
+              , code: stop.code
+              , address: stations[stop.name].address
+              , lonlat: stations[stop.name].lonlat
+              , routes: [route._id]
+            });
+          }
+        });
+      }).onComplete(next);
+    }, f.slot());
+  
+  }, function () {
+    async.eachSeries(Object.keys(stops), function (key, next) {
+      var stop = stops[key];
+      stop.save(function () {
+        stop.routes.forEach(function (route) {
+          routes[route.toString()].stations.addToSet(stop._id);
+        });
+        next();
+      });
+    }, f.slot());
+    
+  }, function () {
+    async.eachSeries(Object.keys(routes), function (key, next) {
+      routes[key].save(next);
+    }, f.slot());
+  
+  }).onSuccess(function () {
+    next();
+  
+  }).onError(function (e) {
+    next(e);
+  });
+};
