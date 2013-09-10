@@ -1,4 +1,5 @@
 var bart = require('./lib/bart');
+var caltrain = require('./lib/caltrain');
 var helpers = require('./lib');
 var ff = require('ff');
 var Station = mongoose.model('Station');
@@ -19,8 +20,12 @@ module.exports = function (app) {
     if (!req.query.station) { return res.send(400); }
     
     if (req.params.agency === 'bart') {
-      bart.getDeparturesByStation(req.query.station, function (err, routes) {
-        res.send(routes || []);
+      bart.getDeparturesByStation(req.query.station, function (err, departures) {
+        res.send(departures || []);
+      });
+    } else if (req.params.agency === 'caltrain') {
+      caltrain.getDeparturesByStation(req.query.station, function (err, departures) {
+        res.send(departures || []);
       });
     } else {
       res.send('agency not found', 404);
