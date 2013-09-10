@@ -136,7 +136,6 @@ module.exports.refresh = function (next) {
       });
       
       var g = ff(function () {
-        console.log('bart: getting stops: route ' + route.code);
         getStops(route.code, g.slot());
         route.save(g.slot());
       
@@ -162,6 +161,7 @@ module.exports.refresh = function (next) {
     }, f.slot());
   
   }, function () {
+    console.log('bart: updating routes with stations');
     async.eachSeries(Object.keys(stops), function (key, next) {
       var stop = stops[key];
       stop.save(function () {
@@ -173,11 +173,13 @@ module.exports.refresh = function (next) {
     }, f.slot());
     
   }, function () {
+    console.log('bart: saving routes');
     async.eachSeries(Object.keys(routes), function (key, next) {
       routes[key].save(next);
     }, f.slot());
   
   }).onSuccess(function () {
+    console.log('bart: done!');
     next();
   
   }).onError(function (e) {

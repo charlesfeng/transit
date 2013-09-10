@@ -84,6 +84,8 @@ var getRoutes = function (next) {
   });
 };
 
+// refresh all caltrain data
+// this includes all routes + stations, with lonlats (for geoquerying)
 module.exports.refresh = function (next) {
   var stations = {};
   var routes;
@@ -101,7 +103,7 @@ module.exports.refresh = function (next) {
   }, function (docs1, docs2) {
     routes = docs2;
     
-    console.log('caltrain: saving stations');
+    console.log('caltrain: creating stations');
     async.mapSeries(docs1, function (doc, next) {
       new Station(doc).save(function (err, station) {
         stations[station.name] = station;
@@ -116,6 +118,7 @@ module.exports.refresh = function (next) {
       , 'ST': [6]
     }
     
+    console.log('caltrain: creating routes');
     async.eachSeries(routes, function (route, next) {
       var times = {}
       route.stops.forEach(function (stop) {
@@ -144,11 +147,13 @@ module.exports.refresh = function (next) {
     }, f.slot());
     
   }, function () {
+    console.log('caltrain: updating stations with routes');
     async.eachSeries(Object.keys(stations), function (key, next) {
       stations[key].save(next);
     }, f.slot());
   
   }).onComplete(function () {
+    console.log('caltrain: done!');
     next();
   
   }).onError(function (e) {
