@@ -14,12 +14,12 @@ module.exports = function (app) {
   });
   
   // gets a list of departures by agency & station name
-  app.get('/api/agencies/:agency/stations/:station/departures', function (req, res) {
+  app.get('/api/agencies/:agency/departures', function (req, res) {
     if (!req.params.agency) { return res.send(400); }
-    if (!req.params.station) { return res.send(400); }
+    if (!req.query.station) { return res.send(400); }
     
     if (req.params.agency === 'bart') {
-      bart.getDeparturesByStation(req.params.station, function (err, routes) {
+      bart.getDeparturesByStation(req.query.station, function (err, routes) {
         res.send(routes || []);
       });
     } else {

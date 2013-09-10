@@ -60,7 +60,9 @@ Map.prototype.redraw = function () {
                   });
                 }
                 
-                $.get('/api/agencies/' + context.data.agency + '/stations/' + context.data.name + '/departures', function (departures) {
+                $.get('/api/agencies/' + context.data.agency + '/departures', {
+                    station: context.data.name
+                }, function (departures) {
                   context.data.departures = (departures || []).slice(0, 10);
                   content = _.template($('#infowindow-template').html(), context.data);
                   infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
