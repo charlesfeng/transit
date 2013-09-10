@@ -193,6 +193,8 @@ var getDeparturesByStation = module.exports.getDeparturesByStation = function (n
         return !p || route.schedule.times[key] > route.schedule.times[p] ? key : p;
       }, null);
       
+      if (lastStop === station) { return; }
+      
       departures.push({
           time: Math.floor((route.schedule.times[station] - time) / (1000 * 60))
         , name: route.name
