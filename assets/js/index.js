@@ -26,7 +26,7 @@ Map.prototype.initialize = function () {
             getaddress: {
                 address: req.term
               , callback: function (data) {
-                  res((data || []).map(function (data) {
+                  res((data || []).slice(0, 5).map(function (data) {
                     return {
                         label: data.formatted_address
                       , latlng: [data.geometry.location.lat(), data.geometry.location.lng()]
