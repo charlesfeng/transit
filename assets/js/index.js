@@ -2,7 +2,7 @@
 
 var Map = function () {
   this.stations = [];
-  this.lonlat = [37.7885284423828, -122.395141601563];
+  this.latlon = [37.7885284423828, -122.395141601563];
 };
 
 Map.prototype.initialize = function () {
@@ -11,31 +11,51 @@ Map.prototype.initialize = function () {
   $('#map').gmap3({
       map: {
           options: {
-              center: this.lonlat
+              center: self.latlon
             , zoom: 14
             , mapTypeId: google.maps.ROADMAP
           }
       }
   });
   
-  this.geolocate();
-  this.getStations();
+  $('#address').autocomplete({
+      position: { my: 'center top+5', at: 'center bottom' }
+    , source: function (req, res) {
+        $('#map').gmap3({
+            getaddress: {
+                address: req.term
+              , callback: function (data) {
+                  res(data || []);
+                }
+            }
+        });
+      }
+    , select: function (event, ui) {
+        $('#address').val(ui.item.formatted_address);
+        self.latlon = [ui.item.geometry.location.lat(), ui.item.geometry.location.lng()];
+        self.recenter(ui.item.geometry.location);
+      }
+  }).data('ui-autocomplete')._renderItem = function (ul, item) {
+    return $('<li/>').append($('<a/>').text(item.formatted_address)).appendTo(ul);
+  };
   
-  $('#nav-search').click(function () { self.search(); });
-  $('#nav-geolocate').click(function () { self.geolocate(); });
+  self.geolocate();
+  self.getStations();
+  
+  $('#geolocate').click(function () { self.geolocate(); });
 };
 
 Map.prototype.redraw = function () {
   $('#map').gmap3({
       map: {
           options: {
-              center: this.lonlat
+              center: this.latlon
           }
       }
     , marker: {
           values: this.stations.map(function (station) {
             return {
-                latLng: [station.lonlat[1], station.lonlat[0]]
+                latLng: [station.latlon[1], station.latlon[0]]
               , data: station
             };
           })
@@ -84,7 +104,7 @@ Map.prototype.geolocate = function () {
   if (!navigator || !navigator.geolocation) return;
   
   navigator.geolocation.getCurrentPosition(function (position) {
-    self.lonlat = [position.coords.latitude, position.coords.longitude];
+    self.latlon = [position.coords.latitude, position.coords.longitude];
     self.recenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
   });
 };
