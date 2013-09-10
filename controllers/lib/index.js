@@ -16,3 +16,13 @@ var geocode = module.exports.geocode = function (address, next) {
     next('no results');
   });
 };
+
+// calculates haversine distance (in miles) between a[lon,lat] and b[lon,lat]
+var diffLonLat = module.exports.diffLonLat = function (a, b) {
+  var DEG = Math.PI / 180;
+  var R = 3959;
+  var dLon = (b[0] - a[0]) * DEG;
+  var dLat = (b[1] - a[1]) * DEG;
+  var c = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(a[1] * DEG) * Math.cos(b[1] * DEG);
+  return R * 2 * Math.atan2(Math.sqrt(c), Math.sqrt(1 - c));
+};

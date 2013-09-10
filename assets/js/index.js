@@ -2,7 +2,8 @@
 
 var Map = function () {
   this.stations = [];
-  this.latlon = [37.7885284423828, -122.395141601563];
+  this.setLatLng([37.7885284423828, -122.395141601563]);
+  this.numRequests = 0;
 };
 
 Map.prototype.initialize = function () {
@@ -11,7 +12,7 @@ Map.prototype.initialize = function () {
   $('#map').gmap3({
       map: {
           options: {
-              center: self.latlon
+              center: self.latlng
             , zoom: 14
             , mapTypeId: google.maps.ROADMAP
           }
@@ -25,19 +26,24 @@ Map.prototype.initialize = function () {
             getaddress: {
                 address: req.term
               , callback: function (data) {
-                  res(data || []);
+                  res((data || []).map(function (data) {
+                    return {
+                        label: data.formatted_address
+                      , latlng: [data.geometry.location.lat(), data.geometry.location.lng()]
+                      , geo: data.geometry.location
+                    };
+                  }));
                 }
             }
         });
       }
     , select: function (event, ui) {
-        $('#address').val(ui.item.formatted_address);
-        self.latlon = [ui.item.geometry.location.lat(), ui.item.geometry.location.lng()];
-        self.recenter(ui.item.geometry.location);
+        self.setLatLng(ui.item.latlng);
+        self.recenter(ui.item.geo);
+        $('#address').blur();
+        $('#address').val(ui.item.label);
       }
-  }).data('ui-autocomplete')._renderItem = function (ul, item) {
-    return $('<li/>').append($('<a/>').text(item.formatted_address)).appendTo(ul);
-  };
+  });
   
   self.geolocate();
   self.getStations();
@@ -45,17 +51,43 @@ Map.prototype.initialize = function () {
   $('#geolocate').click(function () { self.geolocate(); });
 };
 
+Map.prototype.setLatLng = function (latlng) {
+  var self = this;
+  
+  self.latlng = latlng;
+  self.numRequests++;
+  var currRequest = self.numRequests;
+  
+  $.get('/api/departures', {
+      lat: latlng[0]
+    , lng: latlng[1]
+  }, function (departures) {
+    if (currRequest !== self.numRequests) { return; }
+    
+    $('#departures-caltrain').html('');
+    $('#departures-bart').html('');
+    
+    departures.caltrain.forEach(function (departure) {
+      $('#departures-caltrain').append(_.template($('#sidebar-template').html(), departure));
+    });
+    
+    departures.bart.forEach(function (departure) {
+      $('#departures-bart').append(_.template($('#sidebar-template').html(), departure));
+    });
+  });
+};
+
 Map.prototype.redraw = function () {
   $('#map').gmap3({
       map: {
           options: {
-              center: this.latlon
+              center: this.latlng
           }
       }
     , marker: {
           values: this.stations.map(function (station) {
             return {
-                latLng: [station.latlon[1], station.latlon[0]]
+                latLng: [station.lonlat[1], station.lonlat[0]]
               , data: station
             };
           })
@@ -104,8 +136,17 @@ Map.prototype.geolocate = function () {
   if (!navigator || !navigator.geolocation) return;
   
   navigator.geolocation.getCurrentPosition(function (position) {
-    self.latlon = [position.coords.latitude, position.coords.longitude];
+    self.setLatLng([position.coords.latitude, position.coords.longitude]);
     self.recenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+    
+    $('#map').gmap3({
+        getaddress: {
+            latLng: new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
+          , callback: function (data) {
+              if (data.length) { $('#address').val(data[0].formatted_address); }
+            }
+        }
+    });
   });
 };
 
