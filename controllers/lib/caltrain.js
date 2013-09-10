@@ -116,11 +116,11 @@ module.exports.refresh = function (next) {
         'WD': [1, 2, 3, 4, 5]
       , 'WE': [0, 6]
       , 'ST': [6]
-    }
+    };
     
     console.log('caltrain: creating routes');
     async.eachSeries(routes, function (route, next) {
-      var times = {}
+      var times = {};
       route.stops.forEach(function (stop) {
         times[stations[stop.station]._id.toString()] = stop.time;
       });
@@ -141,7 +141,7 @@ module.exports.refresh = function (next) {
       }).save(function (err, doc) {
         route.stops.forEach(function (stop) {
           stations[stop.station].routes.addToSet(doc._id);
-        })
+        });
         next();
       })
     }, f.slot());
