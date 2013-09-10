@@ -2,6 +2,7 @@ var bart = require('./lib/bart');
 var caltrain = require('./lib/caltrain');
 var helpers = require('./lib');
 var ff = require('ff');
+var Route = mongoose.model('Route');
 var Station = mongoose.model('Station');
 
 // api routes
@@ -42,3 +43,18 @@ module.exports = function (app) {
 };
 
 // fetch non-realtime data: routes, stations, addresses, etc.
+var f = ff(function () {
+  console.log('checking data...');
+  Route.count({ agency: 'bart' }).exec(f.slot())
+  Route.count({ agency: 'caltrain' }).exec(f.slot())
+
+}, function (bartExists, caltrainExists) {
+  if (!bartExists) { bart.refresh(f.slot()); }
+  if (!caltrainExists) { caltrain.refresh(f.slot()); }
+
+}).onSuccess(function () {
+  console.log('data ok!')
+
+}).onError(function (e) {
+  console.log(e);
+});
