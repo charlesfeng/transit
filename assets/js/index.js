@@ -64,15 +64,12 @@ Map.prototype.setLatLng = function (latlng) {
   }, function (departures) {
     if (currRequest !== self.numRequests) { return; }
     
-    $('#departures-caltrain').html('');
-    $('#departures-bart').html('');
-    
+    $('#departures').html('');
     departures.caltrain.forEach(function (departure) {
-      $('#departures-caltrain').append(_.template($('#sidebar-template').html(), departure));
+      $('#departures').append(_.template($('#sidebar-template').html(), departure));
     });
-    
     departures.bart.forEach(function (departure) {
-      $('#departures-bart').append(_.template($('#sidebar-template').html(), departure));
+      $('#departures').append(_.template($('#sidebar-template').html(), departure));
     });
   });
 };

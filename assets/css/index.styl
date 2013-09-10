@@ -19,7 +19,7 @@ body
   @media (max-width: 991px)
     bottom 0px
     left 0px
-    height 65%
+    height 60%
     position absolute
     width 100%
 
@@ -27,11 +27,15 @@ body
   height 100%
   overflow-y auto
   
+  > h3
+    margin-top 15px
+    margin-bottom 0px
+  
   @media (max-width: 991px)
-    height 35%
+    height 40%
     overflow-y hidden
 
-#departures > div
+#departures
 .gm-style-iw
   h1
     font-size 15px
@@ -72,12 +76,6 @@ body
           padding 1px 4px
 
 #departures
-  @media (max-width: 991px)
-    overflow-x auto
-    white-space nowrap
-    width 100%
-
-#departures > div
   > div
     > h1
       border-top 1px solid #e6e6e6
@@ -98,22 +96,23 @@ body
   
     @media (max-width: 991px)
       display inline-block
-      margin-right 20px
+      margin-right 25px
       vertical-align top
-  
+      
   @media (max-width: 991px)
-    display inline-block
-    vertical-align top
+    overflow-x auto
+    white-space nowrap
+    width 100%
 
 #form
-  margin-top 20px
+  margin-top 15px
   width 200px
   
   @media (max-width: 991px)
     margin-top 0px
     position absolute
     right 10px
-    top 15px
+    top 10px
 
 #address
   display inline-block
