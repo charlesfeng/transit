@@ -178,7 +178,7 @@ var getDeparturesByStation = module.exports.getDeparturesByStation = function (n
     if (!doc) { return f.fail('station not found'); }
     station = doc._id.toString();
 
-    Route.find({ agency: 'caltrain', stations: station, 'schedule.start': { $lte: time }, 'schedule.end': { $gt: time }, 'schedule.days': day }).lean().exec(f.slot());
+    Route.find({ agency: 'caltrain', stations: station, 'schedule.start': { $lte: time + 1000 * 60 * 90 }, 'schedule.end': { $gt: time }, 'schedule.days': day }).lean().exec(f.slot());
   
   }, function (routes) {
     routes.forEach(function (route) {
