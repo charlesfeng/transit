@@ -36,13 +36,12 @@ body
     overflow-y hidden
 
 #departures
-.gm-style-iw
+.infowindow
   h1
     font-size 15px
-    font-weight bold
+    font-weight 500
     margin 0px
     margin-bottom 5px
-    margin-top 3px
     padding 0px
     
     > .label
@@ -52,7 +51,7 @@ body
     
   h2
     font-size 13px
-    font-style italic
+    font-weight 300
     margin 0px
     padding 0px
   
@@ -82,6 +81,9 @@ body
       margin-top 15px
       padding-top 15px
       
+      > .label
+        font-weight 300
+      
     > h2
       margin-bottom 8px
     
@@ -93,6 +95,10 @@ body
       text-overflow ellipsis
       overflow hidden
       white-space nowrap
+      
+      > span
+      > span > .label
+        font-weight 300
   
     @media (max-width: 991px)
       display inline-block

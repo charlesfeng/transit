@@ -64,7 +64,12 @@ module.exports = function (app) {
             next(null, station);
           });
         }
-      }, next);
+      }, function (err, stations) {
+        if (err) { return next(err); }
+        next(null, stations.filter(function (station) {
+          return station.departures && station.departures.length;
+        }));
+      });
     };
     
     var f = ff(function () {
