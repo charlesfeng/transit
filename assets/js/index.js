@@ -36,8 +36,38 @@ Map.prototype.redraw = function () {
           values: this.stations.map(function (station) {
             return {
                 latLng: [station.lonlat[1], station.lonlat[0]]
+              , data: station
             };
           })
+        , events: {
+              click: function (marker, event, context) {
+                var self = this;
+                
+                var map = $(self).gmap3('get');
+                var infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
+                
+                var content = _.template($('#infowindow-template').html(), context.data);
+                
+                if (infowindow) {
+                  infowindow.open(map, marker);
+                  infowindow.setContent(content);
+                } else {
+                  $(self).gmap3({
+                      infowindow: {
+                          anchor: marker
+                        , options: { content: content }
+                      }
+                  });
+                }
+                
+                $.get('/api/agencies/' + context.data.agency + '/stations/' + context.data.name + '/departures', function (departures) {
+                  context.data.departures = departures || [];
+                  content = _.template($('#infowindow-template').html(), context.data);
+                  infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
+                  infowindow.setContent(content);
+                });
+              }
+          }
       }
   });
 };

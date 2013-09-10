@@ -1,6 +1,7 @@
 var StationSchema = new mongoose.Schema({
     agency: String
   , name: String
+  , shortname: String
   , code: String
   , address: String
   , lonlat: [Number]

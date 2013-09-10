@@ -5,18 +5,26 @@ var Station = mongoose.model('Station');
 
 // api routes
 module.exports = function (app) {
+  // gets a list of all stations for all agencies in our database
   app.get('/api/stations', function (req, res) {
-    Station.find().select('name address lonlat').lean().exec(function (err, stations) {
+    Station.find().select('agency name address lonlat').lean().exec(function (err, stations) {
       if (err) { return res.send(err, 500); }
-      var map = {};
-      stations.forEach(function (station) {
-        station.id = station._id.toString();
-        map[station.name] = station;
-      });
-      res.send(Object.keys(map).map(function (key) {
-        return map[key];
-      }));
+      res.send(stations);
     });
+  });
+  
+  // gets a list of departures by agency & station name
+  app.get('/api/agencies/:agency/stations/:station/departures', function (req, res) {
+    if (!req.params.agency) { return res.send(400); }
+    if (!req.params.station) { return res.send(400); }
+    
+    if (req.params.agency === 'bart') {
+      bart.getDeparturesByStation(req.params.station, function (err, routes) {
+        res.send(routes || []);
+      });
+    } else {
+      res.send('agency not found', 404);
+    }
   });
   
   // refreshes BART data in the database
