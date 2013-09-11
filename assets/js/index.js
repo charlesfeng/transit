@@ -74,6 +74,12 @@ Map.prototype.setLatLng = function (latlng) {
   });
 };
 
+var mapIcons = {
+    'bart': new google.maps.MarkerImage('/images/marker-blue.png', null, null, null, new google.maps.Size(20, 36))
+  , 'caltrain': new google.maps.MarkerImage('/images/marker-red.png', null, null, null, new google.maps.Size(20, 36))
+  , 'user': new google.maps.MarkerImage('/images/marker-green.png', null, null, null, new google.maps.Size(20, 36))
+};
+
 Map.prototype.redraw = function () {
   $('#map').gmap3({
       map: {
@@ -86,10 +92,17 @@ Map.prototype.redraw = function () {
             return {
                 latLng: [station.lonlat[1], station.lonlat[0]]
               , data: station
+              , options: { icon: mapIcons[station.agency] }
             };
-          })
+          }).concat([{
+              latLng: this.latlng
+            , data: null
+            , options: { icon: mapIcons['user'] }
+          }])
         , events: {
               click: function (marker, event, context) {
+                if (!context.data) return;
+
                 var self = this;
                 
                 var map = $(self).gmap3('get');
