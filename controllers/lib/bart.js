@@ -45,7 +45,7 @@ var getStations = function (next) {
           helpers.geocode(station.address, function (e, lonlat) {
             station.lonlat = lonlat;
             next(null, station);
-          })
+          });
         });
       }
     }, f.slot());
