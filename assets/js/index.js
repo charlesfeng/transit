@@ -81,7 +81,7 @@ var mapIcons = {
 };
 
 Map.prototype.redraw = function () {
-  $('#map').gmap3({
+  $('#map').gmap3('clear', 'markers').gmap3({
       map: {
           options: {
               center: this.latlng
