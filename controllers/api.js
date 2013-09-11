@@ -95,15 +95,15 @@ module.exports = function (app) {
 // fetch non-realtime data: routes, stations, addresses, etc.
 var f = ff(function () {
   console.log('checking data...');
-  Route.count({ agency: 'bart' }).exec(f.slot())
-  Route.count({ agency: 'caltrain' }).exec(f.slot())
+  Route.count({ agency: 'bart' }).exec(f.slot());
+  Route.count({ agency: 'caltrain' }).exec(f.slot());
 
 }, function (bartExists, caltrainExists) {
   if (!bartExists) { bart.refresh(f.slot()); }
   if (!caltrainExists) { caltrain.refresh(f.slot()); }
 
 }).onSuccess(function () {
-  console.log('data ok!')
+  console.log('data ok!');
 
 }).onError(function (e) {
   console.log(e);
