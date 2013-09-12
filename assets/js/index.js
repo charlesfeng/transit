@@ -10,8 +10,8 @@ ga('send', 'pageview');
 
 var Map = function () {
   this.stations = [];
-  this.setLatLng([37.7885284423828, -122.395141601563]);
   this.numRequests = 0;
+  this.setLatLng([37.7885284423828, -122.395141601563]);
 };
 
 Map.prototype.initialize = function () {
