@@ -78,10 +78,7 @@ Map.prototype.setLatLng = function (latlng) {
     if (currRequest !== self.numRequests) { return; }
     
     $('#departures').html('');
-    departures.caltrain.forEach(function (departure) {
-      $('#departures').append(_.template($('#sidebar-template').html(), departure));
-    });
-    departures.bart.forEach(function (departure) {
+    departures.caltrain.concat(departures.bart).forEach(function (departure) {
       $('#departures').append(_.template($('#sidebar-template').html(), departure));
     });
   });
@@ -117,10 +114,8 @@ Map.prototype.redraw = function () {
                 if (!context.data) return;
 
                 var self = this;
-                
                 var map = $(self).gmap3('get');
                 var infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
-                
                 var content = _.template($('#infowindow-template').html(), context.data);
                 
                 if (infowindow) {

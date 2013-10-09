@@ -60,7 +60,10 @@ module.exports = function (app) {
           });
         } else if (agency === 'caltrain') {
           caltrain.getDeparturesByStation(station.name, function (err, departures) {
-            station.departures = departures;
+            var nb = sb = 0;
+            station.departures = departures.filter(function (v) {
+              return (v.dircode[0] === 'N' && ++nb < 3) || (v.dircode[0] === 'S' && ++sb < 3);
+            });
             next(null, station);
           });
         }

@@ -4,6 +4,7 @@ var ff = require('ff');
 var helpers = require('./');
 var request = require('request');
 var resolve = require('url').resolve;
+var my511 = require('./my511');
 var Route = mongoose.model('Route');
 var Station = mongoose.model('Station');
 
@@ -59,48 +60,6 @@ var getStations = function (next) {
   });
 };
 
-// gets all BART routes using the my511.org api
-var getRoutes = function (next) {
-  var $;
-  var routes = [];
-  
-  request.get('http://services.my511.org/Transit2.0/GetRoutesForAgency.aspx?agencyName=BART&token=' + config.my511, function (e, r, body) {
-    if (e) { return next(e); }
-    
-    $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true, xmlMode: true });
-    
-    $('routelist > route').each(function (route) {
-      routes.push({
-          name: $(this).attr('name')
-        , code: $(this).attr('code')
-      });
-    });
-    
-    next(null, routes);
-  });
-};
-
-// gets all BART stops for the given route using the my511.org api
-var getStops = function (code, next) {
-  var $;
-  var stops = [];
-  
-  request.get('http://services.my511.org/Transit2.0/GetStopsForRoute.aspx?routeIDF=BART~' + code + '&token=' + config.my511, function (e, r, body) {
-    if (e) { return next(e); }
-    
-    $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true, xmlMode: true });
-    
-    $('stoplist > stop').each(function () {
-      stops.push({
-          name: $(this).attr('name')
-        , code: $(this).attr('stopcode')
-      });
-    });
-    
-    next(null, stops);
-  });
-};
-
 // refresh all bart data
 // this includes all routes + stations, with lonlats (for geoquerying)
 module.exports.refresh = function (next) {
@@ -123,7 +82,7 @@ module.exports.refresh = function (next) {
     });
     
     console.log('bart: getting routes');
-    getRoutes(f.slot());
+    my511.getRoutes('BART', f.slot());
   
   }, function (docs) {
     console.log('bart: getting stops');
@@ -136,8 +95,8 @@ module.exports.refresh = function (next) {
       });
       
       var g = ff(function () {
-        getStops(route.code, g.slot());
-        route.save(g.slot());
+        my511.getStops('BART', route.code, null, g.slot());
+        route.save(g.wait());
       
       }, function (docs) {
         routes[route._id.toString()] = route;
@@ -187,71 +146,8 @@ module.exports.refresh = function (next) {
   });
 };
 
-// gets all departures in the next 90 min for a station code
-var getDepartures = module.exports.getDepartures = function (code, next) {
-  var $;
-  var codes = [];
-  var routes = [];
-  
-  var f = ff(function () {
-    request.get('http://services.my511.org/Transit2.0/GetNextDeparturesByStopCode.aspx?stopCode=' + code + '&token=acd9b06a-8d4c-453f-99f9-e90ae408f4ff', f.slotMulti(2));
-  
-  }, function (r, body) {
-    $ = cheerio.load(body, { lowerCaseTags: true, lowerCaseAttributeNames: true, xmlMode: true });
-    
-    $('route').each(function () {
-      var route = {
-          code: $(this).attr('code')
-        , name: $(this).attr('name')
-        , times: []
-      };
-      
-      codes.push(route.code);
-      
-      $(this).find('departuretime').each(function () {
-        route.times.push($(this).text());
-      });
-      
-      routes.push(route);
-    });
-    
-    Route.find({ code: { $in: codes }}).select('_id code').lean().exec(f.slot());
-  
-  }, function (docs) {
-    var docsMap = {}
-    docs.forEach(function (doc) {
-      docsMap[doc.code] = doc;
-    });
-    routes = routes.filter(function (route) {
-      return docsMap[route.code];
-    });
-    routes.forEach(function (route) {
-      route._id = route.id = docsMap[route.code]._id;
-    });
-    
-  }).onSuccess(function () {
-    next(null, routes.filter(function (route) {
-      return route.times.length;
-    }).reduce(function (p, route) {
-      return p.concat(route.times.map(function (time) {
-        return {
-            _id: route._id
-          , code: route.code
-          , name: route.name
-          , time: time
-        }
-      }));
-    }, []).sort(function (a, b) {
-      return a.time - b.time;
-    }));
-  
-  }).onError(function (e) {
-    next(e);
-  });
-};
-
 // gets all departures in the next 90 min for a station name
-var getDeparturesByStation = module.exports.getDeparturesByStation = function (name, next) {
+module.exports.getDeparturesByStation = function (name, next) {
   var routes = [];
   
   var f = ff(function () {
@@ -259,7 +155,7 @@ var getDeparturesByStation = module.exports.getDeparturesByStation = function (n
   
   }, function (stations) {
     async.eachSeries(stations, function (station, next) {
-      getDepartures(station.code, function (err, docs) {
+      my511.getDepartures(station.code, function (err, docs) {
         routes = routes.concat(docs || []);
         next();
       });

@@ -2,13 +2,9 @@ var RouteSchema = new mongoose.Schema({
     agency: String
   , name: String
   , code: String
+  , direction: String
+  , dircode: String
   , stations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Station' }]
-  , schedule: {
-        start: Number
-      , end: Number
-      , days: [Number]
-      , times: {}
-    }
 });
 
 RouteSchema.index({ agency: 1, code: 1 });
