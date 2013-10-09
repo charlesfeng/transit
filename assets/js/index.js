@@ -119,8 +119,8 @@ var geolocate = function () {
 };
 
 var getStations = function () {
-  $.get('/api/stations', function (stations) {
-    stations = stations;
+  $.get('/api/stations', function (docs) {
+    stations = docs;
     redraw();
   });
 };
