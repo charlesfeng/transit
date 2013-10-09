@@ -123,7 +123,7 @@ $('#map').gmap3({
     map: {
         options: {
             center: latlng
-          , zoom: 14
+          , zoom: $('body').width() > 991 ? 14 : 13
           , mapTypeId: google.maps.ROADMAP
         }
     }
