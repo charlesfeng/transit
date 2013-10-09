@@ -118,13 +118,6 @@ var geolocate = function () {
   });
 };
 
-var getStations = function () {
-  $.get('/api/stations', function (docs) {
-    stations = docs;
-    redraw();
-  });
-};
-
 setLatLng([37.7885284423828, -122.395141601563]);
 
 $('#map').gmap3({
@@ -163,8 +156,12 @@ $('#address').autocomplete({
     }
 });
 
+$.get('/api/stations', function (docs) {
+  stations = docs;
+  redraw();
+});
+
 geolocate();
-getStations();
 
 $('#geolocate').click(function () { geolocate(); });
 
