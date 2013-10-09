@@ -50,7 +50,7 @@ var redraw = function () {
                 var map = $(self).gmap3('get');
                 var infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
                 var content = _.template($('#infowindow-template').html(), context.data);
-                
+
                 if (infowindow) {
                   infowindow.open(map, marker);
                   infowindow.setContent(content);
@@ -62,7 +62,7 @@ var redraw = function () {
                       }
                   });
                 }
-                
+
                 $.get('/api/agencies/' + context.data.agency + '/departures', {
                     station: context.data.name
                 }, function (departures) {
@@ -79,15 +79,14 @@ var redraw = function () {
 
 var setLatLng = function (ll) {
   latlng = ll;
-  numRequests++;
-  var currRequest = numRequests;
-  
+  var currRequest = ++numRequests;
+
   $.get('/api/departures', {
       lat: latlng[0]
     , lng: latlng[1]
   }, function (departures) {
     if (currRequest !== numRequests) { return; }
-    
+
     $('#departures').html('');
     departures.caltrain.concat(departures.bart).forEach(function (departure) {
       $('#departures').append(_.template($('#sidebar-template').html(), departure));
@@ -102,11 +101,11 @@ var recenter = function (center) {
 
 var geolocate = function () {
   if (!navigator || !navigator.geolocation) return;
-  
+
   navigator.geolocation.getCurrentPosition(function (position) {
     setLatLng([position.coords.latitude, position.coords.longitude]);
     recenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-    
+
     $('#map').gmap3({
         getaddress: {
             latLng: new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
@@ -162,7 +161,6 @@ $.get('/api/stations', function (docs) {
 });
 
 geolocate();
-
 $('#geolocate').click(function () { geolocate(); });
 
 }());
