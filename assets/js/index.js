@@ -70,6 +70,7 @@ var redraw = function () {
                   content = _.template($('#infowindow-template').html(), context.data);
                   infowindow = $(self).gmap3({ get: { name: 'infowindow' } });
                   infowindow.setContent(content);
+                  refreshIntervals();
                 });
               }
           }
@@ -90,6 +91,7 @@ var setLatLng = function (ll) {
     $('#departures').html('');
     departures.caltrain.concat(departures.bart).forEach(function (departure) {
       $('#departures').append(_.template($('#sidebar-template').html(), departure));
+      refreshIntervals();
     });
   });
 };
@@ -114,6 +116,31 @@ var geolocate = function () {
             }
         }
     });
+  });
+};
+
+var refreshIntervals = function () {
+  $('.label.departure[data-interval]').each(function () {
+    clearInterval($(this).data('interval'));
+    $(this).removeAttr('data-interval');
+  });
+
+  $('.label.departure').each(function () {
+    var self = this;
+
+    if ($(self).data('interval')) return;
+
+    $(self).data('interval', setInterval(function () {
+      var time = parseInt($(self).text().slice(0, -1), 10) - 1;
+
+      if (time === 14) {
+        $(self).removeClass('label-default').addClass('label-warning');
+      } else if (time === 4) {
+        $(self).removeClass('label-warning').addClass('label-danger');
+      }
+
+      $(self).text(time + 'm');
+    }, 1000 * 60));
   });
 };
 
