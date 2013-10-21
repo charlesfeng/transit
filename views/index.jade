@@ -1,0 +1,89 @@
+doctype
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+    meta(name='apple-mobile-web-app-capable', content='yes')
+    link(rel='apple-touch-icon', href='/images/icon-57.png')
+    link(rel='apple-touch-icon', sizes='72x72', href='/images/icon-72.jpg')
+    link(rel='apple-touch-icon', sizes='114x114', href='/images/icon-114.jpg')
+    
+    title Transit
+    
+    link(href='http://api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.css', rel='stylesheet')
+    != css('index')
+    
+  body
+    div#content
+      div.col-xs-12.col-sm-12.col-md-3.col-lg-3#sidebar
+        h3#header Transit 
+          small by 
+            a(href='https://github.com/charlesfeng') Charles Feng
+          
+        div.form-inline#form
+          input.form-control#address(type='text', placeholder='Enter address...', value='425 1st St, San Francisco, CA')
+          button.btn.btn-success#geolocate: span.glyphicon.glyphicon-map-marker
+        div#departures
+          
+      div.col-xs-12.col-sm-12.col-md-9.col-lg-9#map
+    
+    script(type='text/html', id='infowindow-template')
+      div.infowindow
+        h1 <%= name %>
+          <% if (agency === 'bart') { %>
+          span.label.label-info BART
+          <% } else if (agency === 'caltrain') { %>
+          span.label.label-danger Caltrain
+          <% } %>
+        h2 <%= address %>
+        hr
+        <% if (typeof departures === 'undefined') { %>
+        div Searching for schedules...
+        <% } else if (!departures.length) { %>
+        div No schedules found.
+        <% } else { %>
+        <% _.each(departures, function (departure) { %>
+        div
+          <% if (parseInt(departure.time, 10) < 5) { %>
+          span: span.label.label-danger.departure <%= departure.time %>m
+          <% } else if (parseInt(departure.time, 10) < 15) { %>
+          span: span.label.label-warning.departure <%= departure.time %>m
+          <% } else { %>
+          span: span.label.label-default.departure <%= departure.time %>m
+          <% } %>
+          <% if (agency === 'bart') { %>
+          span toward <%= departure.name %>
+          <% } else if (agency === 'caltrain') { %>
+          span <%= (departure.name + ': ' + departure.direction).split(' ').map(function (v) { return v === 'TO' ? 'to' : v.slice(0, 1).toUpperCase() + v.slice(1).toLowerCase() }).join(' ') %>
+          <% } %>
+        <% }); %>
+        <% } %>
+    
+    script(type='text/html', id='sidebar-template')
+      div
+        h1 <%= name %>
+          <% if (agency === 'bart') { %>
+          span.label.label-info BART
+          <% } else if (agency === 'caltrain') { %>
+          span.label.label-danger Caltrain
+          <% } %>
+        h2 <%= address %>
+        hr
+        <% _.each(departures.slice(0, 3), function (departure) { %>
+        div
+          <% if (parseInt(departure.time, 10) < 5) { %>
+          span: span.label.label-danger.departure <%= departure.time %>m
+          <% } else if (parseInt(departure.time, 10) < 15) { %>
+          span: span.label.label-warning.departure <%= departure.time %>m
+          <% } else { %>
+          span: span.label.label-default.departure <%= departure.time %>m
+          <% } %>
+          <% if (agency === 'bart') { %>
+          span toward <%= departure.name %>
+          <% } else if (agency === 'caltrain') { %>
+          span <%= (departure.name + ': ' + departure.direction).split(' ').map(function (v) { return v === 'TO' ? 'to' : v.slice(0, 1).toUpperCase() + v.slice(1).toLowerCase() }).join(' ') %>
+          <% } %>
+        <% }); %>
+    
+    script(src='http://maps.google.com/maps/api/js?sensor=false&amp;language=en')
+    != js('index')
